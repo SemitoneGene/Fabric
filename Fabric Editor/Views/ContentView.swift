@@ -38,10 +38,11 @@ struct ContentView: View {
     private let navigationWidth = 200.0
     private let navigationWidthMax = 250.0
     private let offsetX = 200.0
+    private let zoomInAmount = 1.1
+    private let zoomOutAmount = 0.9
     private let zoomMin = 0.25
-    private let zoomMax = 2.0
+    private let zoomMax = 10.0
 
-    
     private struct ScrollGeomHelper: Equatable {
         let offset: CGPoint
         let geometry: ScrollGeometry
@@ -68,8 +69,23 @@ struct ContentView: View {
         guard event.type == .keyDown else { return }
 
         if event.modifierFlags.contains(.command) {
-            if event.characters == "=" { zoom(by: 1.1) }
-            else if event.characters == "-" { zoom(by: 0.9) }
+
+            switch (event.characters) {
+                case "=":
+                    zoom(by: zoomInAmount)
+                    break
+
+                case "-":
+                    zoom(by: zoomOutAmount)
+                    break
+
+                case "0":
+                    finalMagnification = 1.0
+                    break
+
+                default:
+                    break;
+            }
         }
     }
 

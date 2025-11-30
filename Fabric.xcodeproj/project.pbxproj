@@ -266,6 +266,7 @@
 				Views/Logo/FabricLogoView.swift,
 				Views/Logo/LogoLetterSpec.swift,
 				Views/Logo/LogoTypes.swift,
+				Views/NodeGridBackgroundView.swift,
 				Views/NodeRegisitryView.swift,
 				Views/Nodes/NodeCanvas.swift,
 				Views/Nodes/NodeCanvasUserActivityMonitor.swift,

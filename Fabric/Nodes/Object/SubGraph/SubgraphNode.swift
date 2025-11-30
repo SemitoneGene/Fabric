@@ -27,7 +27,7 @@ public class SubgraphNode: BaseObjectNode
         let publishedInputPorts = self.ports.filter( { $0.kind == .Inlet && $0.published } )
         let publishedOutputPorts = self.ports.filter( { $0.kind == .Outlet && $0.published } )
 
-        // If we have no inputs or outputs, assume we have shit to 'render'
+        // If we have no inputs or outputs, assume we have something to 'render'
         if publishedInputPorts.isEmpty && publishedOutputPorts.isEmpty
         {
             return .Consumer

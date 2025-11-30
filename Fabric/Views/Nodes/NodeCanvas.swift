@@ -1,108 +1,70 @@
-//
-//  NodeCanvas.swift
-//  v
-//
-//  Created by Anton Marini on 5/26/24.
-//
-
 import SwiftUI
-
-
-//public struct NodeRenameView
-//{
-//    @Environment(\.dismiss) var dismiss // For programmatic dismissal
-//
-//    let node:Node
-//    
-//    var body: some View {
-//            VStack {
-//                TextField("Node Name", text: self.$node.name)
-//                Button("Save") {
-//                    dismiss() // Dismiss the modal
-//                }
-//            }
-//        }
-//}
-
 
 public struct NodeCanvas : View
 {
     @Environment(Graph.self) var graph:Graph
 
-//    @State var activityMonitor = NodeCanvasUserActivityMonitor()
-    
-    // Drag to Offset bullshit
     @State private var initialOffsets: [UUID: CGSize] = [:]
     @State private var activeDragAnchor: UUID? = nil       // which node started the drag
-
-//    @Binding currentFraph
-    
-    public init() { }
-
     @State private var portPositions: [UUID: CGPoint] = [:]
+
+    public init() {}
 
     public var body: some View
     {
         GeometryReader { geom in
+            ZStack {
 
-            ZStack
-            {
-                // image size is 255
-                Image("background")
-                    .resizable(resizingMode: .tile)// Need this pattern image repeated throughout the page
-                    .offset(-geom.size / 2)
-                
+                NodeGridBackground()
+                    .ignoresSafeArea()
+
+                // Node layer is centered in the canvas
                 let graph = self.graph.activeSubGraph ?? self.graph
-                ForEach(graph.nodes, id: \.id) { currentNode in
 
-                    NodeView(node: currentNode , offset: currentNode.offset)
-                        .offset( currentNode.offset )
-                        .highPriorityGesture(
-                            TapGesture(count: 1)
-                                .modifiers(.shift)
-                                .onEnded {
-                                    // Expand selection
-                                    currentNode.isSelected.toggle()
-                                },
-                        )
-                        .gesture(
-                            SimultaneousGesture(
-                                DragGesture(minimumDistance: 3)
-                                    .onChanged { value in
-                                        
-                                        self.calcDragChanged(forValue: value, activeGraph: graph, currentNode: currentNode)
+                ZStack {
+                    ForEach(graph.nodes, id: \.id) { currentNode in
+                        NodeView(node: currentNode, offset: currentNode.offset)
+                            .offset(currentNode.offset)
+                            .highPriorityGesture(
+                                TapGesture(count: 1)
+                                    .modifiers(.shift)
+                                    .onEnded {
+                                        currentNode.isSelected.toggle()
                                     }
-                                    .onEnded { _ in
-
-                                        self.calcDragEnded()
-                                    },
-                                
+                            )
+                            .gesture(
                                 SimultaneousGesture(
-                                    
-                                    TapGesture(count: 1)
-                                        .onEnded {
-                                            // Replace selection
-                                            graph.deselectAllNodes()
-                                            currentNode.isSelected.toggle()
-                                        },
-                                    TapGesture(count: 2)
-                                        .onEnded
-                                    {
-                                        if let subgraph = currentNode as? SubgraphNode
-                                        {
-                                            self.graph.activeSubGraph = subgraph.subGraph
+                                    DragGesture(minimumDistance: 3)
+                                        .onChanged { value in
+                                            self.calcDragChanged(forValue: value,
+                                                                 activeGraph: graph,
+                                                                 currentNode: currentNode)
                                         }
-                                    }
+                                        .onEnded { _ in
+                                            self.calcDragEnded()
+                                        },
+                                    SimultaneousGesture(
+                                        TapGesture(count: 1)
+                                            .onEnded {
+                                                graph.deselectAllNodes()
+                                                currentNode.isSelected.toggle()
+                                            },
+                                        TapGesture(count: 2)
+                                            .onEnded {
+                                                if let subgraph = currentNode as? SubgraphNode {
+                                                    self.graph.activeSubGraph = subgraph.subGraph
+                                                }
+                                            }
+                                    )
                                 )
                             )
-                        )
-                        .contextMenu
-                        {
-                            self.contextMenu(forNode: currentNode, graph: graph)
-                        }
+                            .contextMenu {
+                                self.contextMenu(forNode: currentNode, graph: graph)
+                            }
+                    }
                 }
+                .offset(geom.size / 2)  // <- now only the nodes are centered
             }
-            .offset(geom.size / 2)
             .clipShape(Rectangle())
             .contentShape(Rectangle())
             .coordinateSpace(name: "graph")
@@ -115,26 +77,18 @@ public struct NodeCanvas : View
             .focusable(true, interactions: .edit)
             .focusEffectDisabled()
             .onDeleteCommand {
-                
                 let graph = self.graph.activeSubGraph ?? self.graph
-
-                let selectedNodes = graph.nodes.filter({ $0.isSelected })
-                selectedNodes.forEach( { graph.delete(node: $0) } )
+                let selectedNodes = graph.nodes.filter { $0.isSelected }
+                selectedNodes.forEach { graph.delete(node: $0) }
             }
             .onTapGesture {
                 let graph = self.graph.activeSubGraph ?? self.graph
-
                 graph.deselectAllNodes()
             }
-            
             .id(self.graph.activeSubGraph?.shouldUpdateConnections ?? self.graph.shouldUpdateConnections)
-            // For hiding the nodes after a timeout - used if rendering nodes above content?
-//            .opacity(self.activityMonitor.isActive ? 1.0 : 0.0)
-//                           .animation(.easeInOut(duration: 0.5), value: self.activityMonitor.isActive)
-            
-        } // Pan Canvas
+        }
     }
-    
+
     private func calcDragChanged(forValue value:DragGesture.Value, activeGraph graph:Graph, currentNode:Node)
     {
         // If this drag just began, capture snapshots

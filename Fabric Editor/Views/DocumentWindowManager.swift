@@ -25,9 +25,7 @@ class DocumentOutputWindowManager : NSObject
     private var outputwindow:NSWindow? = nil
     private var outputRenderer:CAMetalDisplayLinkRenderer? = nil
     
-    // Toolbar shit
     private weak var playPauseItem: NSToolbarItem?
-
     
     override init()
     {

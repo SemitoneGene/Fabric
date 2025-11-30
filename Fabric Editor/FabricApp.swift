@@ -13,7 +13,9 @@ import Sparkle
 
 @main
 struct FabricApp: App {
-    
+
+    @StateObject private var appTheme = AppTheme()
+
     private let updaterController: SPUStandardUpdaterController
 
     init()
@@ -23,21 +25,18 @@ struct FabricApp: App {
         updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     }
     
-    
     var body: some Scene {
 
         DocumentGroup(newDocument: FabricDocument(withTemplate: true) ) { file in
             
             ContentView(document: file.$document)
                 .onAppear {
-                    // THIS SHIT HAS TO BE ON MAIN THREAD FOR APPKIT
                     file.document.setupOutputWindow()
                 }
                 .onDisappear {
-                    // THIS SHIT HAS TO BE ON MAIN THREAD FOR APPKIT
                     file.document.closeOutputWindow()
                 }
-                
+                .environmentObject(appTheme)
         }
         .commands {
             AboutCommands()
